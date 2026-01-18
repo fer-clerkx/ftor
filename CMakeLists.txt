@@ -17,6 +17,8 @@ add_executable(
     ftor_test
     src/bencode.cpp
     test/test_bencode.cpp
+    src/metainfo.cpp
+    test/test_metainfo.cpp
 )
 target_link_libraries(ftor_test GTest::gtest_main)
 
