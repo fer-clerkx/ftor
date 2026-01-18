@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.22)
+project(torrent_project)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(
+    ftor_test
+    src/bencode.cpp
+    test/test_bencode.cpp
+)
+target_link_libraries(ftor_test GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(ftor_test)
