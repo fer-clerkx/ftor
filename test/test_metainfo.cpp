@@ -4,6 +4,8 @@
 #include <cmath>
 #include <numeric>
 
+#include <openssl/sha.h>
+
 #include "../src/bencode.h"
 
 constexpr Bencode nominal_input() {
@@ -515,4 +517,21 @@ TEST(MetainfoTest, getPieceFromFileMultiOverlapping) {
         EXPECT_EQ(file.pieces[0].length, piece_list_output[0].length);
         EXPECT_EQ(file.pieces[0].hash, piece_list_output[0].hash);
     }
+}
+
+TEST(MetainfoTest, getInfoHash) {
+    Bencode input_elem = nominal_input();
+
+    std::string info_dump = input_elem.at("info").Dump();
+    std::vector<unsigned char> expected_hash(20);
+    SHA1(reinterpret_cast<const unsigned char*>(info_dump.data()),
+        info_dump.size(), expected_hash.data());
+
+    std::istringstream input(input_elem.Dump());
+    Metainfo dut(input);
+
+    const std::vector<std::byte> output = dut.get_info_hash();
+    ASSERT_EQ(output.size(), 20);
+    for (std::size_t i = 0; i < 20; i++)
+        EXPECT_EQ(std::to_integer<unsigned char>(output[i]), expected_hash[i]);
 }

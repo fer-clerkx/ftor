@@ -11,6 +11,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+find_package(OpenSSL)
+
 enable_testing()
 
 add_executable(
@@ -21,6 +23,7 @@ add_executable(
     test/test_metainfo.cpp
 )
 target_link_libraries(ftor_test GTest::gtest_main)
+target_link_libraries(ftor_test OpenSSL::Crypto)
 
 include(GoogleTest)
 gtest_discover_tests(ftor_test)

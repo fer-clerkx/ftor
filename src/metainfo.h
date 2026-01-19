@@ -78,6 +78,7 @@ private:
     long piece_length_;
     std::vector<Piece> piece_list_;
     long total_length_;
+    std::vector<std::byte> info_hash_;
 };
 
 #endif // _METAINFO_H

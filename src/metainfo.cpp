@@ -1,4 +1,5 @@
 #include <cmath>
+#include <openssl/sha.h>
 
 #include "metainfo.h"
 
@@ -56,6 +57,8 @@ Metainfo::Metainfo(std::istream& input) : top_(Bencode::Parse(input)) {
             piece_idx++;
         }
     }
+
+    calculate_info_hash();
 }
 
 void Metainfo::parse_announce() {
@@ -141,6 +144,16 @@ void Metainfo::parse_file_list() {
     }
 }
 
+void Metainfo::calculate_info_hash() {
+    info_hash_.resize(20);
+    std::string info_string = info_.Dump();
+    SHA1(
+        reinterpret_cast<const unsigned char*>(info_string.data()),
+        info_string.size(),
+        reinterpret_cast<unsigned char *>(info_hash_.data())
+    );
+}
+
 
 std::string_view Metainfo::get_announce() const {
     return announce_;
@@ -160,6 +173,10 @@ const std::vector<Piece>& Metainfo::get_piece_list() const {
 
 long Metainfo::get_total_length() const {
     return total_length_;
+}
+
+const std::vector<std::byte>& Metainfo::get_info_hash() const {
+    return info_hash_;
 }
 
 
