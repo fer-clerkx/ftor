@@ -13,6 +13,8 @@ FetchContent_MakeAvailable(googletest)
 
 find_package(OpenSSL)
 
+add_subdirectory(lib/CxxUrl)
+
 enable_testing()
 
 add_executable(
@@ -24,6 +26,7 @@ add_executable(
 )
 target_link_libraries(ftor_test GTest::gtest_main)
 target_link_libraries(ftor_test OpenSSL::Crypto)
+target_link_libraries(ftor_test chmike::CxxUrl)
 
 include(GoogleTest)
 gtest_discover_tests(ftor_test)

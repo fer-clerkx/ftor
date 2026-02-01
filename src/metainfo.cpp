@@ -66,7 +66,19 @@ void Metainfo::parse_announce() {
         throw MetainfoError(MetainfoError::ExceptionID::kMissingAnnounce);
     if (top_.at("announce").Type() != Bencode::ValueType::kString)
         throw MetainfoError(MetainfoError::ExceptionID::kAnnounceNotString);
-    announce_ = top_.at("announce").get_string();
+
+    announce_ = std::string(top_.at("announce").get_string());
+    try {
+        announce_.str();
+    } catch (const Url::parse_error& e) {
+        throw MetainfoError(MetainfoError::ExceptionID::kAnnounceInvalidURL);
+    }
+
+    if (announce_.scheme() != "http")
+        throw MetainfoError(MetainfoError::ExceptionID::kAnnounceInvalidScheme);
+
+    if (announce_.path().empty())
+        announce_.path("/");
 }
 
 void Metainfo::parse_info() {
@@ -155,7 +167,7 @@ void Metainfo::calculate_info_hash() {
 }
 
 
-std::string_view Metainfo::get_announce() const {
+const Url& Metainfo::get_announce() const {
     return announce_;
 }
 
@@ -191,6 +203,10 @@ const char* Metainfo::MetainfoError::what() const noexcept {
         return "input error - missing announce field";
     case MetainfoError::ExceptionID::kAnnounceNotString:
         return "input error - expected announce field to be of type string";
+    case MetainfoError::ExceptionID::kAnnounceInvalidURL:
+        return "input error - announce is not a valid URL";
+    case MetainfoError::ExceptionID::kAnnounceInvalidScheme:
+        return "input error - expected announce URL to use HTTP scheme";
     case MetainfoError::ExceptionID::kMissingInfo:
         return "input error - missing info field";
     case MetainfoError::ExceptionID::kInfoNotDict:

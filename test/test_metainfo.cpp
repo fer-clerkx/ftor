@@ -17,7 +17,7 @@ constexpr Bencode nominal_input() {
     long total_length = std::reduce(length_list.begin(), length_list.end());
     std::size_t num_pieces = ceil(total_length / (double)piece_length);
     return Bencode {
-        "announce", "test_announce",
+        "announce", "http://test_announce.org:1337/tracker_1/tracker_2/",
         "info", {
             "name", "test_name",
             "piece length", piece_length,
@@ -88,10 +88,70 @@ TEST(MetainfoTest, announceNotString) {
         Metainfo::MetainfoError::ExceptionID::kAnnounceNotString);
 }
 
+TEST(MetainfoTest, announceContainsSpace) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "http://test announce.org";
+    std::istringstream input(input_elem.Dump());
+    check_metainfo_exception(input,
+        Metainfo::MetainfoError::ExceptionID::kAnnounceInvalidURL);
+}
+
+TEST(MetainfoTest, announceContainsCurlyBrace) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "http://test{announce.org";
+    std::istringstream input(input_elem.Dump());
+    check_metainfo_exception(input,
+        Metainfo::MetainfoError::ExceptionID::kAnnounceInvalidURL);
+}
+
+TEST(MetainfoTest, announceUsingHTTPS) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "https://test_announce.org";
+    std::istringstream input(input_elem.Dump());
+    check_metainfo_exception(input,
+        Metainfo::MetainfoError::ExceptionID::kAnnounceInvalidScheme);
+}
+
+TEST(MetainfoTest, announceUsingUDP) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "udp://test_announce.org";
+    std::istringstream input(input_elem.Dump());
+    check_metainfo_exception(input,
+        Metainfo::MetainfoError::ExceptionID::kAnnounceInvalidScheme);
+}
+
 TEST(MetainfoTest, announceGood) {
     std::istringstream input(nominal_input().Dump());
     Metainfo dut(input);
-    EXPECT_EQ(dut.get_announce(), "test_announce");
+    EXPECT_EQ(dut.get_announce().scheme(), "http");
+    EXPECT_EQ(dut.get_announce().host(), "test_announce.org");
+    EXPECT_EQ(dut.get_announce().port(), "1337");
+    EXPECT_EQ(dut.get_announce().path(), "/tracker_1/tracker_2/");
+}
+
+TEST(MetainfoTest, announceEmptyPath) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "http://test_announce.org";
+    std::istringstream input(input_elem.Dump());
+    Metainfo dut(input);
+    EXPECT_EQ(dut.get_announce().scheme(), "http");
+    EXPECT_EQ(dut.get_announce().host(), "test_announce.org");
+    EXPECT_EQ(dut.get_announce().path(), "/");
+}
+
+TEST(MetainfoTest, announcequery) {
+    Bencode input_elem = nominal_input();
+    input_elem["announce"] = "http://test_announce.org?foo=bar&hello=world";
+    std::istringstream input(input_elem.Dump());
+    Metainfo dut(input);
+    EXPECT_EQ(dut.get_announce().scheme(), "http");
+    EXPECT_EQ(dut.get_announce().host(), "test_announce.org");
+    EXPECT_EQ(dut.get_announce().path(), "/");
+    ASSERT_EQ(dut.get_announce().query().size(), 2);
+    EXPECT_EQ(dut.get_announce().query()[0].key(), "foo");
+    EXPECT_EQ(dut.get_announce().query()[0].val(), "bar");
+    EXPECT_EQ(dut.get_announce().query()[1].key(), "hello");
+    EXPECT_EQ(dut.get_announce().query()[1].val(), "world");
 }
 
 TEST(MetainfoTest, missingInfo) {

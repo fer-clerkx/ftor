@@ -1,0 +1,3 @@
+[submodule "lib/CxxUrl"]
+	path = lib/CxxUrl
+	url = git@github.com:chmike/CxxUrl.git

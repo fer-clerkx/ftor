@@ -2,6 +2,7 @@
 #define _METAINFO_H
 
 #include <string>
+#include "../lib/CxxUrl/url.hpp"
 
 #include "bencode.h"
 
@@ -20,7 +21,7 @@ struct File {
 class Metainfo {
 public:
     Metainfo(std::istream& input);
-    std::string_view get_announce() const;
+    const Url& get_announce() const;
     std::string_view get_name() const;
     const std::vector<File>& get_file_list () const;
     const std::vector<Piece>& get_piece_list() const;
@@ -33,6 +34,8 @@ public:
             kTopLevelNotDict,
             kMissingAnnounce,
             kAnnounceNotString,
+            kAnnounceInvalidURL,
+            kAnnounceInvalidScheme,
             kMissingInfo,
             kInfoNotDict,
             kMissingName,
@@ -71,7 +74,7 @@ private:
     void parse_file_list();
     void calculate_info_hash();
     Bencode top_;
-    std::string_view announce_;
+    Url announce_;
     Bencode info_;
     std::string_view name_;
     std::vector<File> file_list_;
